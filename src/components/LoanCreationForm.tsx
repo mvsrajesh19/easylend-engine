@@ -10,7 +10,7 @@ import { calculateLoanDetails, formatCurrency, generateLoanId } from '@/lib/bank
 
 interface LoanCreationFormProps {
   customers: Customer[];
-  onLoanCreated: (loan: Loan) => void;
+  onLoanCreated: (loan: Loan) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const LoanCreationForm = ({ customers, onLoanCreated }: LoanCreationFormProps) => {
@@ -45,7 +45,7 @@ export const LoanCreationForm = ({ customers, onLoanCreated }: LoanCreationFormP
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.customer_id || !formData.loan_amount || !formData.loan_period_years || !formData.interest_rate_yearly) {
@@ -73,18 +73,18 @@ export const LoanCreationForm = ({ customers, onLoanCreated }: LoanCreationFormP
       emis_left: parseFloat(formData.loan_period_years) * 12
     };
 
-    onLoanCreated(newLoan);
+    const result = await onLoanCreated(newLoan);
     
-    // Reset form
-    setFormData({
-      customer_id: '',
-      loan_amount: '',
-      loan_period_years: '',
-      interest_rate_yearly: ''
-    });
-    setCalculatedDetails(null);
-
-    toast.success('Loan created successfully!');
+    if (result.success) {
+      // Reset form
+      setFormData({
+        customer_id: '',
+        loan_amount: '',
+        loan_period_years: '',
+        interest_rate_yearly: ''
+      });
+      setCalculatedDetails(null);
+    }
   };
 
   return (

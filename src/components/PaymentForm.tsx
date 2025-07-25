@@ -10,7 +10,7 @@ import { formatCurrency, generatePaymentId } from '@/lib/bankingCalculations';
 
 interface PaymentFormProps {
   loans: Loan[];
-  onPaymentRecorded: (payment: Payment) => void;
+  onPaymentRecorded: (payment: Payment) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const PaymentForm = ({ loans, onPaymentRecorded }: PaymentFormProps) => {
@@ -22,7 +22,7 @@ export const PaymentForm = ({ loans, onPaymentRecorded }: PaymentFormProps) => {
 
   const selectedLoan = loans.find(loan => loan.loan_id === formData.loan_id);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.loan_id || !formData.amount || !formData.payment_type) {
@@ -50,16 +50,16 @@ export const PaymentForm = ({ loans, onPaymentRecorded }: PaymentFormProps) => {
       payment_date: new Date().toISOString()
     };
 
-    onPaymentRecorded(newPayment);
+    const result = await onPaymentRecorded(newPayment);
     
-    // Reset form
-    setFormData({
-      loan_id: '',
-      amount: '',
-      payment_type: ''
-    });
-
-    toast.success('Payment recorded successfully!');
+    if (result.success) {
+      // Reset form
+      setFormData({
+        loan_id: '',
+        amount: '',
+        payment_type: ''
+      });
+    }
   };
 
   const suggestEmiAmount = () => {

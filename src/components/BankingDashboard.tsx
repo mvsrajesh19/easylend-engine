@@ -7,7 +7,9 @@ import { LoanCreationForm } from './LoanCreationForm';
 import { PaymentForm } from './PaymentForm';
 import { LoanLedger } from './LoanLedger';
 import { CustomerOverview } from './CustomerOverview';
-import { useBankingData } from '@/hooks/useBankingData';
+import { AddCustomerForm } from './AddCustomerForm';
+import { useBankingDataSupabase } from '@/hooks/useBankingDataSupabase';
+import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/bankingCalculations';
 import { 
   CreditCard, 
@@ -17,21 +19,26 @@ import {
   DollarSign, 
   TrendingUp,
   Users,
-  Activity
+  Activity,
+  LogOut
 } from 'lucide-react';
 
 export const BankingDashboard = () => {
+  const { signOut } = useAuth();
   const {
     customers,
     loans,
     payments,
+    loading,
+    addCustomer,
     addLoan,
     addPayment,
     getLoanById,
     getPaymentsByLoanId,
     getLoansByCustomerId,
-    getCustomerById
-  } = useBankingData();
+    getCustomerById,
+    refreshData
+  } = useBankingDataSupabase();
 
   const [selectedLoanId, setSelectedLoanId] = useState<string>('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
@@ -45,6 +52,21 @@ export const BankingDashboard = () => {
   const selectedLoan = selectedLoanId ? getLoanById(selectedLoanId) : undefined;
   const selectedCustomer = selectedCustomerId ? getCustomerById(selectedCustomerId) : undefined;
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading banking data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -55,9 +77,16 @@ export const BankingDashboard = () => {
               <h1 className="text-3xl font-bold">Bank Lending System</h1>
               <p className="text-muted-foreground">Comprehensive loan management platform</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-success" />
-              <span className="text-sm font-medium">System Active</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-success" />
+                <span className="text-sm font-medium">System Active</span>
+              </div>
+              <AddCustomerForm onCustomerAdded={addCustomer} />
+              <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
